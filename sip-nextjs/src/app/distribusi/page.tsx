@@ -37,7 +37,10 @@ export default function DistribusiPage() {
     }
   }, [bulan, tahun]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { 
+    const timer = setTimeout(() => fetchData(), 0);
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   const handleToggle = async (item: DistribusiItem) => {
     const newStatus = item.status === 'SUDAH_DISETOR' ? 'BELUM_DISETOR' : 'SUDAH_DISETOR';

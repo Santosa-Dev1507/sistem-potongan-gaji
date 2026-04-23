@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ success: false, error: 'Kredensial tidak valid' }, { status: 401 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ success: false, error: 'Kesalahan server saat login' }, { status: 500 });
   }
 }

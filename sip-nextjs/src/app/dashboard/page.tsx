@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { Receipt, Banknote, Wallet, UserCheck, Upload, CheckCircle, Edit2, AlertTriangle, History, Loader } from 'lucide-react';
 
-const IconMap: Record<string, any> = { Receipt, Banknote, Wallet, UserCheck };
+import { ElementType } from 'react';
+const IconMap: Record<string, ElementType> = { Receipt, Banknote, Wallet, UserCheck };
 
 const activities = [
   { icon: Upload,        bg: 'bg-secondary-container', text: 'text-on-secondary-container', title: 'File Tagihan Bank Jateng Diimpor',     time: '2 jam lalu • tagihan_bpd_apr26.xlsx' },
