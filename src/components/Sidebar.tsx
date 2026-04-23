@@ -44,9 +44,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       {/* Header with close button (mobile only) */}
       <div className="flex items-center justify-between px-2 py-4 mb-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xl shrink-0">
-            5
-          </div>
+          <img src="https://iili.io/FntumI2.md.png" alt="Logo SMPN 5 Klaten" className="w-12 h-12 object-contain shrink-0 drop-shadow-sm" />
           <div>
             <h1 className="text-base font-bold text-[#000666] leading-none">SMPN 5 Klaten</h1>
             <p className="text-[10px] text-secondary tracking-widest uppercase mt-1">Sistem Potongan</p>

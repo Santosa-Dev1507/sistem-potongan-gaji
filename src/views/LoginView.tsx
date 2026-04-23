@@ -38,9 +38,7 @@ export function LoginView() {
 
       <div className="relative z-10 w-full max-w-md bg-white/60 backdrop-blur-3xl p-8 rounded-[2rem] shadow-2xl border border-white/40">
         <div className="text-center mb-10">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-white mx-auto mb-6 shadow-lg shadow-primary/30">
-            <span className="text-2xl font-black">5</span>
-          </div>
+          <img src="https://iili.io/FntumI2.md.png" alt="Logo SMPN 5 Klaten" className="w-20 h-20 object-contain mx-auto mb-4 drop-shadow-md" />
           <h1 className="text-2xl font-black text-[#000666]">SMPN 5 Klaten</h1>
           <p className="text-xs text-secondary mt-2 tracking-[0.2em] uppercase font-bold">Gerbang Buku Kas Institusi</p>
         </div>
