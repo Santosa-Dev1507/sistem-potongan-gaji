@@ -23,7 +23,7 @@ const INITIALS = (nama: string) => nama.split(' ').map((w) => w[0]).slice(0, 2).
 const COLORS = ['bg-secondary-container text-on-secondary-container', 'bg-tertiary-fixed text-on-tertiary-fixed', 'bg-primary-fixed text-primary', 'bg-secondary-fixed text-on-secondary-fixed'];
 
 function buildWaLink(guru: Guru, bulan: string, tahun: number): string {
-  const pesan = `Assalamu'alaikum, ${guru.nama}.\n\nBerikut kami sampaikan informasi potongan gaji Anda bulan *${bulan} ${tahun}* dari Bendahara SMPN 5 Klaten.\n\nSilakan cek rincian potongan Anda melalui Sistem Informasi Potongan (SIP) di:\n🔗 http://localhost:3001\n\nLogin menggunakan NIP Bapak/Ibu.\n\nTerima kasih. 🙏`;
+  const pesan = `Assalamu'alaikum, ${guru.nama}.\n\nBerikut kami sampaikan informasi potongan gaji Anda bulan *${bulan} ${tahun}* dari Bendahara SMPN 5 Klaten.\n\nSilakan cek rincian potongan Anda melalui Sistem Informasi Potongan (SIP) di:\n🔗 http://sistem-potongan-gaji.vercel.app\n\nLogin menggunakan:\nUsername: NIP Bapak/Ibu\nPassword: guru123\n\nTerima kasih. 🙏`;
   return `https://wa.me/${guru.no_wa}?text=${encodeURIComponent(pesan)}`;
 }
 
