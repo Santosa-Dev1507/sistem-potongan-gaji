@@ -57,7 +57,7 @@ export default function DashboardPage() {
               <Loader className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : (
-            displayStats.map((stat: Record<string, unknown>) => {
+            displayStats.map((stat: any) => {
               const Icon = stat.Icon || IconMap[stat.icon] || Receipt;
               return (
                 <div key={stat.label} className={`p-4 md:p-5 rounded-2xl shadow-sm ${stat.special ? 'salary-pulse-gradient' : 'bg-surface-container-lowest'}`}>
