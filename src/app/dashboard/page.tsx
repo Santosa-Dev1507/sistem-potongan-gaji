@@ -45,8 +45,8 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const displayStats = dashboardData?.stats || stats;
-  const penyaluran = dashboardData?.penyaluran || { belumSetor: 3, totalInstansi: 15, bulanLabel: 'April 2026' };
+  const displayStats = (dashboardData?.stats as any[]) || stats;
+  const penyaluran = (dashboardData?.penyaluran as any) || { belumSetor: 3, totalInstansi: 15, bulanLabel: 'April 2026' };
   return (
     <AppShell>
       <div className="space-y-6 md:space-y-8">
