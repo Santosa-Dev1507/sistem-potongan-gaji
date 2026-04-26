@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import AppShell from '@/components/AppShell';
 import { CloudUpload, Paperclip, FileSpreadsheet, Download, CheckSquare, X, Info } from 'lucide-react';
-import { POTONGAN_KEYS } from '@/lib/types';
+
 
 interface PreviewRow {
   nip: string;
@@ -30,11 +30,20 @@ export default function ImportPage() {
   };
 
   const downloadTemplate = () => {
-    // Buat header CSV template
+    // Template header kolom — ikuti susunan sheet POTONGAN_[BULAN]_[TAHUN]
+    // Kolom potongan bersifat dinamis (dibaca otomatis dari header sheet)
     const headers = [
-      'NIP', 'NAMA_GURU', 'GAJI_KOTOR', 'ANGS_BANK_JATENG', 'ANGS_KE', 'MASUK_REKENING',
-      ...POTONGAN_KEYS.map((p) => `NOMINAL_${p.id.toUpperCase()}`),
-      ...POTONGAN_KEYS.map((p) => `ANGSURAN_KE_${p.id.toUpperCase()}`),
+      'NIP', 'NAMA_GURU', 'GAJI_KOTOR',
+      'KE', 'WAJIB_KOP_NARASOMA',
+      'KE', 'ANGSURAN_KOP_NARASOMA',
+      'KE', 'WAJIB_KOP_BAHTERA',
+      'KE', 'ANGSURAN_KOP_BAHTERA',
+      'KORPRI_KECAMATAN', 'DANPEN_PGRI', 'DANSOS_DINAS', 'PRALENAN',
+      'DHARMA_WANITA', 'DANSOS_5', 'PKPRI_PRALENAN', 'PKPRI_THR',
+      'INFAQ', 'BAZNAS', 'SRINUK',
+      'KE', 'DPLK',
+      'KE', 'TASPEN_LIFE',
+      'ESPEMA_PEDULI',
     ];
     const csv = headers.join(',') + '\n';
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
