@@ -22,11 +22,22 @@ export default function RincianPage() {
       'Januari','Februari','Maret','April','Mei','Juni',
       'Juli','Agustus','September','Oktober','November','Desember'
     ];
-    const bulan = BULAN_ID[now.getMonth()];
+    const currIndex = now.getMonth();
+    const bulan = BULAN_ID[currIndex];
     const tahun = now.getFullYear();
 
+    // Hitung bulan sebelumnya
+    let prevIndex = currIndex - 1;
+    let prevTahun = tahun;
+    if (prevIndex < 0) {
+      prevIndex = 11;
+      prevTahun -= 1;
+    }
+    const prevBulan = BULAN_ID[prevIndex];
+
     const url = `/api/slip?nip=${user.username}&bulan=${bulan}&tahun=${tahun}`;
-    console.log('[rincian] fetch:', url);
+    const urlPrev = `/api/slip?nip=${user.username}&bulan=${prevBulan}&tahun=${prevTahun}`;
+    console.log('[rincian] fetch curr:', url, 'prev:', urlPrev);
 
     // Buat fallback dari data sesi — potongan kosong (belum ada data di sheet)
     const fallback: SlipPotongan = {
@@ -39,12 +50,33 @@ export default function RincianPage() {
       potongan: [],
     };
 
-    fetch(url)
-      .then((r) => r.json())
-      .then((json) => {
-        console.log('[rincian] response:', json);
-        if (json.success && json.data) {
-          setSlip(json.data);
+    Promise.all([
+      fetch(url).then((r) => r.json()),
+      fetch(urlPrev).then((r) => r.json()).catch(() => ({ success: false })),
+    ])
+      .then(([jsonCurr, jsonPrev]) => {
+        console.log('[rincian] response curr:', jsonCurr);
+        if (jsonCurr.success && jsonCurr.data) {
+          const finalSlip = jsonCurr.data as SlipPotongan;
+
+          // Komparasi dengan bulan sebelumnya jika ada
+          if (jsonPrev.success && jsonPrev.data) {
+            const prevPotongan = jsonPrev.data.potongan as SlipPotongan['potongan'];
+            finalSlip.potongan = finalSlip.potongan.map((curr) => {
+              // Cari berdasarkan ID instansi (atau name sebagai fallback)
+              const prev = prevPotongan.find((p) => p.id === curr.id || p.name === curr.name);
+              if (prev) {
+                if (curr.nominal !== prev.nominal) {
+                  return { ...curr, selisih: curr.nominal - prev.nominal };
+                }
+              } else if (curr.nominal > 0) {
+                // Item ini tidak ada di bulan lalu atau nilainya 0, tapi sekarang ada isinya
+                return { ...curr, isBaru: true };
+              }
+              return curr;
+            });
+          }
+          setSlip(finalSlip);
         } else {
           setSlip(fallback);
         }
@@ -119,18 +151,32 @@ export default function RincianPage() {
                     <div key={item.id} className={`flex items-center justify-between px-5 py-3 gap-3 ${aktif ? '' : 'opacity-35'}`}>
                       <div className="flex items-start gap-2 min-w-0">
                         <span className="text-xs text-secondary/60 font-mono shrink-0 mt-0.5 w-5 text-right">{idx + 1}.</span>
-                        <div className="min-w-0">
-                          <p className="text-sm text-on-surface">{item.name}</p>
-                          {item.angsuranKe && (
-                            <span className="inline-block mt-0.5 px-2 py-0.5 bg-primary-fixed text-on-primary-fixed text-[10px] font-bold rounded-full">
-                              Angsuran ke-{item.angsuranKe}
-                            </span>
-                          )}
+                        <div className="min-w-0 flex flex-col items-start">
+                          <p className={`text-sm ${item.selisih !== undefined || item.isBaru ? 'font-bold text-error' : 'text-on-surface'}`}>{item.name}</p>
+                          <div className="flex flex-wrap gap-1 mt-0.5">
+                            {item.angsuranKe && (
+                              <span className="inline-block px-2 py-0.5 bg-primary-fixed text-on-primary-fixed text-[10px] font-bold rounded-full">
+                                Angsuran ke-{item.angsuranKe}
+                              </span>
+                            )}
+                            {item.isBaru && (
+                              <span className="inline-block px-2 py-0.5 bg-tertiary text-white text-[10px] font-bold rounded-full">
+                                Baru
+                              </span>
+                            )}
+                            {item.selisih !== undefined && (
+                              <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 text-[10px] font-bold rounded-full ${item.selisih > 0 ? 'bg-error/10 text-error' : 'bg-[#25D366]/10 text-[#25D366]'}`}>
+                                {item.selisih > 0 ? 'Naik' : 'Turun'} {formatRupiah(Math.abs(item.selisih))}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <p className={`text-sm font-bold shrink-0 ${aktif ? 'text-error' : 'text-secondary'}`}>
-                        {aktif ? formatRupiah(item.nominal) : '–'}
-                      </p>
+                      <div className="text-right shrink-0">
+                        <p className={`text-sm font-bold ${aktif ? (item.selisih !== undefined || item.isBaru ? 'text-error' : 'text-on-surface') : 'text-secondary'}`}>
+                          {aktif ? formatRupiah(item.nominal) : '–'}
+                        </p>
+                      </div>
                     </div>
                   );
                 })}

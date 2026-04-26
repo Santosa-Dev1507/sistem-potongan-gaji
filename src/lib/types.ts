@@ -8,6 +8,9 @@ export interface DeductionItem {
   name: string;
   nominal: number;
   angsuranKe?: number;
+  // Perbandingan dengan bulan lalu
+  selisih?: number;
+  isBaru?: boolean;
 }
 
 export interface SlipPotongan {
