@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/AppShell';
-import { Receipt, Banknote, Wallet, UserCheck, Upload, CheckCircle, Edit2, AlertTriangle, History, Loader } from 'lucide-react';
+import { Receipt, Banknote, Wallet, UserCheck, Upload, CheckCircle, Edit2, AlertTriangle, History, Loader, CalendarDays } from 'lucide-react';
+import Link from 'next/link';
 
 import { ElementType } from 'react';
 const IconMap: Record<string, ElementType> = { Receipt, Banknote, Wallet, UserCheck };
@@ -50,6 +51,18 @@ export default function DashboardPage() {
   return (
     <AppShell>
       <div className="space-y-6 md:space-y-8">
+
+        {/* Tombol Riwayat Bulan Lalu */}
+        <section className="flex justify-end">
+          <Link
+            href="/riwayat-admin"
+            className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-lowest border border-outline-variant/30 text-primary font-bold text-sm rounded-xl hover:bg-primary-fixed/30 transition-all active:scale-95 shadow-sm"
+          >
+            <CalendarDays className="w-4 h-4" />
+            Lihat Bulan Sebelumnya
+          </Link>
+        </section>
+
         {/* Stats */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
           {loading ? (

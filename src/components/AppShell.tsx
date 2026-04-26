@@ -3,14 +3,15 @@
 import { useState, useCallback, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { LayoutDashboard, Users, Upload, Landmark, FileText, History, LogOut, X, Menu, Calendar, Bell } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, Landmark, FileText, History, LogOut, X, Menu, Calendar, Bell, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 
 const adminNav = [
-  { href: '/dashboard', label: 'Dashboard',         icon: LayoutDashboard },
-  { href: '/guru',      label: 'Data Guru',         icon: Users },
-  { href: '/import',   label: 'Impor Tagihan',      icon: Upload },
-  { href: '/distribusi', label: 'Distribusi Saluran', icon: Landmark },
+  { href: '/dashboard',     label: 'Dashboard',          icon: LayoutDashboard },
+  { href: '/guru',          label: 'Data Guru',           icon: Users },
+  { href: '/import',        label: 'Impor Tagihan',       icon: Upload },
+  { href: '/distribusi',    label: 'Distribusi Saluran',  icon: Landmark },
+  { href: '/riwayat-admin', label: 'Riwayat Historis',   icon: CalendarDays },
 ];
 
 const guruNav = [
@@ -19,12 +20,13 @@ const guruNav = [
 ];
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
-  '/dashboard':  { title: 'Dashboard Potongan',    subtitle: 'Overview Rekapitulasi' },
-  '/guru':       { title: 'Direktori Guru',         subtitle: 'Potongan Individu' },
-  '/import':     { title: 'Impor Tagihan Guru',     subtitle: 'Buku Kas Institusi' },
-  '/distribusi': { title: 'Distribusi Penyaluran',  subtitle: 'Instansi Pihak Ke-3' },
-  '/rincian':    { title: 'Rincian Potongan',       subtitle: 'SMPN 5 Klaten' },
-  '/riwayat':    { title: 'Riwayat Potongan',       subtitle: 'Rekam Jejak Operasional' },
+  '/dashboard':     { title: 'Dashboard Potongan',    subtitle: 'Overview Rekapitulasi' },
+  '/guru':          { title: 'Direktori Guru',         subtitle: 'Potongan Individu' },
+  '/import':        { title: 'Impor Tagihan Guru',     subtitle: 'Buku Kas Institusi' },
+  '/distribusi':    { title: 'Distribusi Penyaluran',  subtitle: 'Instansi Pihak Ke-3' },
+  '/rincian':       { title: 'Rincian Potongan',       subtitle: 'SMPN 5 Klaten' },
+  '/riwayat':       { title: 'Riwayat Potongan',       subtitle: 'Rekam Jejak Operasional' },
+  '/riwayat-admin': { title: 'Riwayat Historis',       subtitle: 'Data Bulan Sebelumnya' },
 };
 
 export default function AppShell({ children }: { children: ReactNode }) {
