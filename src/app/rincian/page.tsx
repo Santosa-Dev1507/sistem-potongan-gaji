@@ -6,22 +6,6 @@ import AppShell from '@/components/AppShell';
 import { SlipPotongan, POTONGAN_KEYS, formatRupiah } from '@/lib/types';
 import { Download, Landmark, HelpCircle } from 'lucide-react';
 
-// Fallback mock ketika Google Sheets belum dikonfigurasi
-const MOCK_SLIP: SlipPotongan = {
-  id: 'mock-001',
-  nip: '123456789',
-  namaGuru: 'Sri Juwariyah, M.Pd.',
-  bulan: 'April',
-  tahun: 2026,
-  gajiKotor: 6_795_000,
-  potongan: POTONGAN_KEYS.map((p, i) => ({
-    id: p.id,
-    name: p.name,
-    nominal: [0, 1_100_000, 100_000, 0, 10_000, 32_250, 0, 0, 5_000, 10_000, 0, 0, 10_000, 50_000, 195_750, 0, 0, 0][i] ?? 0,
-    angsuranKe: i === 1 ? 8 : undefined,
-  })),
-};
-
 export default function RincianPage() {
   const { user } = useAuth();
   const [slip, setSlip] = useState<SlipPotongan | null>(null);
@@ -44,6 +28,17 @@ export default function RincianPage() {
     const url = `/api/slip?nip=${user.username}&bulan=${bulan}&tahun=${tahun}`;
     console.log('[rincian] fetch:', url);
 
+    // Buat fallback dari data sesi — BUKAN data guru lain / mock hardcoded
+    const fallback: SlipPotongan = {
+      id: `${user.username}-${bulan}-${tahun}`,
+      nip: user.username,
+      namaGuru: user.namaGuru || `NIP: ${user.username}`,
+      bulan,
+      tahun,
+      gajiKotor: 0,
+      potongan: POTONGAN_KEYS.map((p) => ({ id: p.id, name: p.name, nominal: 0 })),
+    };
+
     fetch(url)
       .then((r) => r.json())
       .then((json) => {
@@ -51,12 +46,12 @@ export default function RincianPage() {
         if (json.success && json.data) {
           setSlip(json.data);
         } else {
-          setSlip(MOCK_SLIP); // fallback ke mock
+          setSlip(fallback);
         }
       })
       .catch((err) => {
         console.error('[rincian] fetch error:', err);
-        setSlip(MOCK_SLIP);
+        setSlip(fallback);
       })
       .finally(() => setLoading(false));
   }, [user]);

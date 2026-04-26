@@ -9,6 +9,7 @@ export interface SessionPayload {
   username: string;
   role: 'admin' | 'guru';
   email: string;
+  namaGuru?: string; // Nama lengkap guru dari DATA_GURU, diisi saat login
 }
 
 export async function encrypt(payload: SessionPayload) {
