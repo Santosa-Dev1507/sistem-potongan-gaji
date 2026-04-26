@@ -37,30 +37,6 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-// Daftar 18 ID potongan standar (urutan sesuai slip fisik)
-export const POTONGAN_KEYS = [
-  { id: 'wajib_narasoma',    name: 'Wajib Kop. Narasoma' },
-  { id: 'angs_narasoma',     name: 'Angs. Kop. Narasoma' },
-  { id: 'wajib_bahtera',     name: 'Wajib Kop. Bahtera' },
-  { id: 'angs_bahtera',      name: 'Angs. Kop. Bahtera' },
-  { id: 'korpri',            name: 'KORPRI Kecamatan' },
-  { id: 'danpen_pgri',       name: 'Danpen PGRI' },
-  { id: 'dansos_dinas',      name: 'Dansos Dinas' },
-  { id: 'pralenan',          name: 'Pralenan' },
-  { id: 'dharma_wanita',     name: 'Iuran Dharma Wanita' },
-  { id: 'dansos5',           name: 'Iuran Keluarga / Sosial (Dansos 5)' },
-  { id: 'pkpri_pralenan',    name: 'PKPRI Pralenan Pensiun' },
-  { id: 'pkpri_thr',         name: 'PKPRI THR' },
-  { id: 'infaq',             name: 'Infaq/Kegiatan Rohani' },
-  { id: 'baznas',            name: 'BAZNAS' },
-  { id: 'srinuk',            name: 'Beras Rojolele "SRINUK"' },
-  { id: 'dplk',              name: 'DPLK' },
-  { id: 'taspen_life',       name: 'Taspen Life' },
-  { id: 'espema_peduli',     name: 'Espema Peduli' },
-] as const;
-
-export type PotonganKey = typeof POTONGAN_KEYS[number]['id'];
-
 export const formatRupiah = (angka: number): string =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -79,21 +55,22 @@ export interface DistribusiItem {
   tglSetor?: string;
 }
 
-export const INSTANSI_MAP: { instansi: string; kategori: string; ids: PotonganKey[] }[] = [
-  { instansi: 'Koperasi Narasoma',    kategori: 'Koperasi Pokok & Angsuran',  ids: ['wajib_narasoma', 'angs_narasoma'] },
-  { instansi: 'Koperasi Bahtera',     kategori: 'Koperasi Pokok & Angsuran',  ids: ['wajib_bahtera', 'angs_bahtera'] },
-  { instansi: 'KORPRI Kecamatan',     kategori: 'Organisasi',                 ids: ['korpri'] },
-  { instansi: 'Danpen PGRI',          kategori: 'Organisasi',                 ids: ['danpen_pgri'] },
-  { instansi: 'Dansos Dinas',         kategori: 'Dana Sosial',                ids: ['dansos_dinas'] },
-  { instansi: 'Pralenan',             kategori: 'Dana Sosial',                ids: ['pralenan'] },
-  { instansi: 'Iuran Dharma Wanita',  kategori: 'Organisasi',                 ids: ['dharma_wanita'] },
-  { instansi: 'Dansos 5 / Keluarga',  kategori: 'Dana Sosial',                ids: ['dansos5'] },
-  { instansi: 'PKPRI Pralenan',       kategori: 'PKPRI',                      ids: ['pkpri_pralenan'] },
-  { instansi: 'PKPRI THR',            kategori: 'PKPRI',                      ids: ['pkpri_thr'] },
-  { instansi: 'Infaq/Rohani',         kategori: 'Keagamaan',                  ids: ['infaq'] },
-  { instansi: 'BAZNAS',               kategori: 'Zakat & Sodaqoh',            ids: ['baznas'] },
-  { instansi: 'Beras Srinuk',         kategori: 'Kebutuhan Pokok (Bulog)',    ids: ['srinuk'] },
-  { instansi: 'DPLK',                 kategori: 'Pensiun',                    ids: ['dplk'] },
-  { instansi: 'Taspen Life',          kategori: 'Asuransi',                   ids: ['taspen_life'] },
-  { instansi: 'Espema Peduli',        kategori: 'Dana Sosial',                ids: ['espema_peduli'] },
+// patterns: kata kunci (lowercase) yang dicocokkan ke nama kolom header sheet secara parsial
+export const INSTANSI_MAP: { instansi: string; kategori: string; patterns: string[] }[] = [
+  { instansi: 'Koperasi Narasoma',   kategori: 'Koperasi Pokok & Angsuran', patterns: ['narasoma'] },
+  { instansi: 'Koperasi Bahtera',    kategori: 'Koperasi Pokok & Angsuran', patterns: ['bahtera'] },
+  { instansi: 'KORPRI Kecamatan',    kategori: 'Organisasi',                patterns: ['korpri'] },
+  { instansi: 'Danpen PGRI',         kategori: 'Organisasi',                patterns: ['pgri', 'danpen'] },
+  { instansi: 'Dansos Dinas',        kategori: 'Dana Sosial',               patterns: ['dansos dinas'] },
+  { instansi: 'Pralenan',            kategori: 'Dana Sosial',               patterns: ['pralenan'] },
+  { instansi: 'Dharma Wanita',       kategori: 'Organisasi',                patterns: ['dharma wanita', 'dharma wani'] },
+  { instansi: 'Dansos 5 / Keluarga', kategori: 'Dana Sosial',               patterns: ['dansos 5', 'dansos5', 'iuran keluarga'] },
+  { instansi: 'PKPRI Pralenan',      kategori: 'PKPRI',                     patterns: ['pkpri pralenan', 'pral pkpri'] },
+  { instansi: 'PKPRI THR',           kategori: 'PKPRI',                     patterns: ['pkpri thr', 'thr pkpri', 'thr bahtera'] },
+  { instansi: 'Infaq/Rohani',        kategori: 'Keagamaan',                 patterns: ['infaq', 'infak', 'rohani'] },
+  { instansi: 'BAZNAS',              kategori: 'Zakat & Sodaqoh',           patterns: ['baznas'] },
+  { instansi: 'Beras Srinuk',        kategori: 'Kebutuhan Pokok (Bulog)',   patterns: ['srinuk', 'beras'] },
+  { instansi: 'DPLK',                kategori: 'Pensiun',                   patterns: ['dplk'] },
+  { instansi: 'Taspen Life',         kategori: 'Asuransi',                  patterns: ['taspen life', 'taspen'] },
+  { instansi: 'Espema Peduli',       kategori: 'Dana Sosial',               patterns: ['espema peduli', 'espema'] },
 ];

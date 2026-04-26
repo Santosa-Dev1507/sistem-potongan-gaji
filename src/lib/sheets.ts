@@ -3,7 +3,7 @@
 // Digunakan oleh API Routes Next.js (server-side only)
 // ============================================================
 import { google } from 'googleapis';
-import { SlipPotongan, Guru, POTONGAN_KEYS, INSTANSI_MAP, PotonganKey } from './types';
+import { SlipPotongan, Guru, INSTANSI_MAP } from './types';
 
 // Autentikasi menggunakan Service Account
 function getAuth() {
@@ -89,62 +89,83 @@ function parseAngsuranKe(val: string | undefined): number | undefined {
   return n > 0 && n < 10000 ? n : undefined;
 }
 
-// Alias header untuk tiap potongan (case-insensitive, partial match)
-const POTONGAN_HEADERS: Record<string, string[]> = {
-  wajib_narasoma: ['wajib kop narasoma', 'wajib narasoma'],
-  angs_narasoma:  ['angs kop narasoma', 'angsuran kop narasoma', 'angsuran narasoma'],
-  wajib_bahtera:  ['wajib kop bahtera', 'wajib bahtera'],
-  angs_bahtera:   ['angs kop bahtera', 'angsuran kop bahtera', 'angsuran bahtera'],
-  korpri:         ['korpri kecamatan', 'korpri'],
-  danpen_pgri:    ['danpen pgri', 'pgri danpen', 'danpen'],
-  dansos_dinas:   ['dansos dinas'],
-  pralenan:       ['pralenan'],
-  dharma_wanita:  ['dharma wanita', 'dharma wani'],
-  dansos5:        ['dansos 5', 'dansos5', 'iuran keluarga'],
-  pkpri_pralenan: ['pkpri pralenan', 'pral pkpri'],
-  pkpri_thr:      ['pkpri thr', 'thr pkpri', 'thr bahtera'],
-  infaq:          ['infaq kegiatan rohani', 'infaq rohani', 'infaq', 'infak'],
-  baznas:         ['baznas'],
-  srinuk:         ['beras rojolele', 'srinuk'],
-  dplk:           ['dplk'],
-  taspen_life:    ['taspen life', 'taspen'],
-  espema_peduli:  ['espema peduli', 'espema pedu'],
-};
+// ── Helpers dinamis ────────────────────────────────────────
 
-type ColMap = {
-  gaji: number;
-  potongan: Record<string, number>;   // id → kolom nominal
-  angsuranKe: Record<string, number>; // id → kolom ke
-};
+/** Slugify header kolom → jadi ID potongan */
+function slugify(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, '_').trim();
+}
 
-// Bangun peta kolom dari baris header
-function buildColMap(headers: string[]): ColMap {
-  // Normalisasi: lowercase, hapus titik (PRAL. PKPRI → pral pkpri), dan spasi ganda
-  const normalize = (v: string) =>
+/** Title-case header kolom untuk tampilan */
+function formatHeaderName(header: string): string {
+  return header.trim().split(/\s+/).map(
+    (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+  ).join(' ');
+}
+
+// Header yang BUKAN potongan (skip saat baca kolom)
+const GAJI_PATTERNS  = ['gaji kotor', 'gaji_kotor'];
+const KE_PATTERNS    = ['ke', 'angsuran ke'];
+const SKIP_POSITIONS = new Set([0, 1]); // index 0=NIP, index 1=NAMA
+
+/**
+ * Baca semua kolom dari baris header secara dinamis.
+ * - Skip 2 kolom pertama (NIP, NAMA)
+ * - Kolom bernama "KE" → penanda angsuranKe untuk kolom SESUDAHNYA (ke kanan)
+ * - Kolom GAJI KOTOR → dipakai sebagai gajiKotor
+ * - Kolom lain → potongan
+ * FIX: KE ada di kolom SEBELUM nominal (L→M, Q→R, U→V)
+ */
+function buildDynamicSlip(
+  headerRow: string[],
+  row: string[],
+  bulan: string,
+  tahun: number
+): SlipPotongan {
+  const norm = (v: string) =>
     (v || '').toLowerCase().replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
-  const h = headers.map(normalize);
+  const h = headerRow.map(norm);
 
-  const gaji = h.findIndex((v) => v.includes('gaji kotor') || v === 'gaji_kotor');
+  let gajiKotor = 0;
+  const potongan = [];
 
-  const potongan: Record<string, number> = {};
-  for (const [id, aliases] of Object.entries(POTONGAN_HEADERS)) {
-    const idx = h.findIndex((v) => aliases.some((a) => v.includes(a) || a.includes(v)));
-    if (idx >= 0) potongan[id] = idx;
-  }
+  for (let i = 0; i < h.length; i++) {
+    if (SKIP_POSITIONS.has(i)) continue;
+    const header = h[i];
+    if (!header) continue;
 
-  // Kolom "KE" / "ANGSURAN KE" langsung setelah kolom nominal masing-masing potongan
-  const angsuranKe: Record<string, number> = {};
-  for (const [id, nomCol] of Object.entries(potongan)) {
-    const next = nomCol + 1;
-    if (next < h.length) {
-      const nextH = h[next];
-      if (nextH === 'ke' || nextH === 'angsuran ke' || nextH.startsWith('ke ')) {
-        angsuranKe[id] = next;
-      }
+    // Skip kolom KE — hanya sebagai metadata
+    if (KE_PATTERNS.includes(header)) continue;
+
+    // Kolom gaji kotor
+    if (GAJI_PATTERNS.some((g) => header.includes(g))) {
+      gajiKotor = parseAngka(row[i]);
+      continue;
     }
+
+    // Kolom potongan — cek apakah kolom SEBELUMNYA adalah "KE"
+    let angsuranKe: number | undefined = undefined;
+    if (i > 0 && KE_PATTERNS.includes(h[i - 1])) {
+      angsuranKe = parseAngsuranKe(row[i - 1]);
+    }
+
+    potongan.push({
+      id:         slugify(headerRow[i]),
+      name:       formatHeaderName(headerRow[i]),
+      nominal:    parseAngka(row[i]),
+      angsuranKe,
+    });
   }
 
-  return { gaji, potongan, angsuranKe };
+  return {
+    id:       `${row[0]}-${bulan}-${tahun}`,
+    nip:      row[0] || '',
+    namaGuru: row[1] || '',
+    bulan,
+    tahun,
+    gajiKotor,
+    potongan,
+  };
 }
 
 export async function getSlipByNip(
@@ -154,45 +175,21 @@ export async function getSlipByNip(
 ): Promise<SlipPotongan | null> {
   const sheets = getSheetsClient();
   const sheetName = getSheetName(bulan, tahun);
-
-  let headerRow: string[] = [];
-  let rows: string[][] = [];
   try {
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: `${sheetName}!A1:BZ`,
     });
     const all = (res.data.values || []) as string[][];
-    headerRow = all[0] || [];
-    rows = all.slice(1);
+    const headerRow = all[0] || [];
+    const rows = all.slice(1);
+    const row = rows.find((r) => r[0] === nip);
+    if (!row) return null;
+    return buildDynamicSlip(headerRow, row, bulan, tahun);
   } catch (err) {
     console.error(`[sheets] getSlipByNip ERROR — sheetName: ${sheetName}`, err);
     return null;
   }
-
-  const row = rows.find((r) => r[0] === nip);
-  if (!row) return null;
-
-  const colMap = buildColMap(headerRow);
-
-  const potongan = POTONGAN_KEYS.map((p) => ({
-    id: p.id,
-    name: p.name,
-    nominal: colMap.potongan[p.id] !== undefined ? parseAngka(row[colMap.potongan[p.id]]) : 0,
-    angsuranKe: colMap.angsuranKe[p.id] !== undefined
-      ? parseAngsuranKe(row[colMap.angsuranKe[p.id]])
-      : undefined,
-  }));
-
-  return {
-    id: `${nip}-${bulan}-${tahun}`,
-    nip: row[0],
-    namaGuru: row[1],
-    bulan,
-    tahun,
-    gajiKotor: colMap.gaji >= 0 ? parseAngka(row[colMap.gaji]) : parseAngka(row[2]),
-    potongan,
-  };
 }
 
 export async function getAllSlipsBulan(
@@ -201,42 +198,18 @@ export async function getAllSlipsBulan(
 ): Promise<SlipPotongan[]> {
   const sheets = getSheetsClient();
   const sheetName = getSheetName(bulan, tahun);
-
-  let headerRow: string[] = [];
-  let rows: string[][] = [];
   try {
     const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: `${sheetName}!A1:BZ`,
     });
     const all = (res.data.values || []) as string[][];
-    headerRow = all[0] || [];
-    rows = all.slice(1);
+    const headerRow = all[0] || [];
+    const rows = all.slice(1).filter((r) => r[0]); // skip baris tanpa NIP
+    return rows.map((row) => buildDynamicSlip(headerRow, row, bulan, tahun));
   } catch {
     return [];
   }
-
-  const colMap = buildColMap(headerRow);
-
-  return rows.map((row) => {
-    const potongan = POTONGAN_KEYS.map((p) => ({
-      id: p.id,
-      name: p.name,
-      nominal: colMap.potongan[p.id] !== undefined ? parseAngka(row[colMap.potongan[p.id]]) : 0,
-      angsuranKe: colMap.angsuranKe[p.id] !== undefined
-        ? parseAngsuranKe(row[colMap.angsuranKe[p.id]])
-        : undefined,
-    }));
-    return {
-      id: `${row[0]}-${bulan}-${tahun}`,
-      nip: row[0],
-      namaGuru: row[1],
-      bulan,
-      tahun,
-      gajiKotor: colMap.gaji >= 0 ? parseAngka(row[colMap.gaji]) : parseAngka(row[2]),
-      potongan,
-    };
-  });
 }
 
 // Menyimpan/update slip satu guru di sheet bulan tersebut
@@ -298,12 +271,17 @@ export async function kalkulasiDistribusi(
 ): Promise<{ instansi: string; kategori: string; jumlahGuru: number; totalDana: number }[]> {
   const slips = await getAllSlipsBulan(bulan, tahun);
 
-  return INSTANSI_MAP.map(({ instansi, kategori, ids }) => {
+  return INSTANSI_MAP.map(({ instansi, kategori, patterns }) => {
     let totalDana = 0;
     let jumlahGuru = 0;
     for (const slip of slips) {
       const kontribusi = slip.potongan
-        .filter((p) => (ids as string[]).includes(p.id))
+        .filter((p) =>
+          patterns.some((pat) =>
+            p.name.toLowerCase().includes(pat.toLowerCase()) ||
+            p.id.includes(pat.toLowerCase().replace(/\s+/g, '_'))
+          )
+        )
         .reduce((sum, p) => sum + p.nominal, 0);
       if (kontribusi > 0) {
         totalDana += kontribusi;

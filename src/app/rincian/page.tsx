@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import AppShell from '@/components/AppShell';
-import { SlipPotongan, POTONGAN_KEYS, formatRupiah } from '@/lib/types';
+import { SlipPotongan, formatRupiah } from '@/lib/types';
 import { Download, Landmark, HelpCircle } from 'lucide-react';
 
 export default function RincianPage() {
@@ -28,7 +28,7 @@ export default function RincianPage() {
     const url = `/api/slip?nip=${user.username}&bulan=${bulan}&tahun=${tahun}`;
     console.log('[rincian] fetch:', url);
 
-    // Buat fallback dari data sesi — BUKAN data guru lain / mock hardcoded
+    // Buat fallback dari data sesi — potongan kosong (belum ada data di sheet)
     const fallback: SlipPotongan = {
       id: `${user.username}-${bulan}-${tahun}`,
       nip: user.username,
@@ -36,7 +36,7 @@ export default function RincianPage() {
       bulan,
       tahun,
       gajiKotor: 0,
-      potongan: POTONGAN_KEYS.map((p) => ({ id: p.id, name: p.name, nominal: 0 })),
+      potongan: [],
     };
 
     fetch(url)
@@ -127,9 +127,14 @@ export default function RincianPage() {
                     <div key={item.id} className={`flex items-center justify-between px-5 py-3 gap-3 ${aktif ? '' : 'opacity-35'}`}>
                       <div className="flex items-start gap-2 min-w-0">
                         <span className="text-xs text-secondary/60 font-mono shrink-0 mt-0.5 w-5 text-right">{idx + 1}.</span>
-                        <p className="text-sm text-on-surface">
-                          {item.name}
-                        </p>
+                        <div className="min-w-0">
+                          <p className="text-sm text-on-surface">{item.name}</p>
+                          {item.angsuranKe && (
+                            <span className="inline-block mt-0.5 px-2 py-0.5 bg-primary-fixed text-on-primary-fixed text-[10px] font-bold rounded-full">
+                              Angsuran ke-{item.angsuranKe}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <p className={`text-sm font-bold shrink-0 ${aktif ? 'text-error' : 'text-secondary'}`}>
                         {aktif ? formatRupiah(item.nominal) : '–'}
