@@ -88,36 +88,28 @@ export default function RincianPage() {
 
         {!loading && slip && (
           <>
-            {/* Identitas & Kalkulasi Gaji */}
-            <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden">
-              <div className="p-5 flex items-start justify-between gap-4 border-b border-outline-variant/20">
-                <div>
-                  <p className="text-xs text-secondary font-medium mb-0.5">Nama Pegawai</p>
-                  <p className="text-lg font-bold text-on-surface">{slip.namaGuru}</p>
-                  <p className="text-sm font-mono text-secondary mt-1">NIP: {slip.nip}</p>
-                </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
-                  <Landmark className="w-6 h-6" />
-                </div>
+            {/* Identitas Pegawai */}
+            <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/30 p-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs text-secondary font-medium mb-0.5">Nama Pegawai</p>
+                <p className="text-lg font-bold text-on-surface">{slip.namaGuru}</p>
+                <p className="text-sm font-mono text-secondary mt-1">NIP: {slip.nip}</p>
               </div>
-
-              <div className="p-5 space-y-3">
-                <div className="flex justify-between items-center">
-                  <p className="text-sm font-semibold text-on-surface">GAJI KOTOR</p>
-                  <p className="text-base font-black text-primary">{formatRupiah(slip.gajiKotor)}</p>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t border-outline-variant/20">
-                  <p className="text-sm font-bold text-on-surface">Gaji Bersih</p>
-                  <p className="text-xl font-black text-primary">{formatRupiah(slip.gajiKotor - totalPotongan)}</p>
-                </div>
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
+                <Landmark className="w-6 h-6" />
               </div>
             </div>
 
-            {/* 18 Potongan */}
+            {/* Total Potongan & Rincian */}
             <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden">
               <div className="px-5 py-4 bg-error/5 border-b border-error/10 flex justify-between items-center">
-                <h4 className="text-sm font-black uppercase tracking-wide text-error">Potongan ke Bendahara</h4>
-                <span className="px-2.5 py-1 bg-error/10 text-error text-[10px] font-bold rounded-full">{activePotongan.length} Aktif</span>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wide text-error mb-1">Total Potongan</h4>
+                  <p className="text-2xl font-black text-error">{formatRupiah(totalPotongan)}</p>
+                </div>
+                <span className="px-2.5 py-1 bg-error/10 text-error text-[10px] font-bold rounded-full text-center">
+                  {activePotongan.length}<br/>Aktif
+                </span>
               </div>
 
               <div className="divide-y divide-outline-variant/10">
@@ -143,10 +135,26 @@ export default function RincianPage() {
                   );
                 })}
               </div>
+            </div>
 
-              <div className="px-5 py-4 border-t-2 border-outline-variant/40 bg-error/5 flex justify-between items-center">
-                <p className="text-sm font-black uppercase text-on-surface tracking-wide">Jumlah Potongan</p>
-                <p className="text-xl font-black text-error">{formatRupiah(totalPotongan)}</p>
+            {/* Kalkulasi Gaji Bersih */}
+            <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden">
+              <div className="p-5 space-y-3">
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-semibold text-secondary">Gaji Kotor</p>
+                  <p className="text-base font-bold text-on-surface">{formatRupiah(slip.gajiKotor)}</p>
+                </div>
+                <div className="flex justify-between items-center">
+                  <p className="text-sm font-semibold text-secondary">Potongan</p>
+                  <p className="text-base font-bold text-error">− {formatRupiah(totalPotongan)}</p>
+                </div>
+                <div className="flex justify-between items-center pt-3 border-t-2 border-outline-variant/30">
+                  <div>
+                    <p className="text-sm font-black uppercase text-primary">Gaji Bersih</p>
+                    <p className="text-[10px] font-bold text-secondary mt-0.5">MASUK REKENING</p>
+                  </div>
+                  <p className="text-xl font-black text-primary">{formatRupiah(slip.gajiKotor - totalPotongan)}</p>
+                </div>
               </div>
             </div>
 
