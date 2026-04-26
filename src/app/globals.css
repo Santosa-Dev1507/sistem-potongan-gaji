@@ -70,33 +70,39 @@
 
 /* ── Print / PDF styles ───────────────────────── */
 @media print {
-  /* Sembunyikan semua kecuali konten utama */
-  body > * { display: none !important; }
-  #__next > * { display: none !important; }
-
-  /* Tampilkan hanya area main content */
-  main, [data-print="slip"] {
-    display: block !important;
-    position: static !important;
-  }
-
-  /* Hilangkan header/footer navigasi */
-  header, nav, footer,
+  /* Sembunyikan elemen navigasi & kontrol UI */
+  aside,
+  header,
+  nav,
+  footer,
   [data-print="hide"],
   .print\:hidden {
     display: none !important;
   }
 
-  /* Reset layout */
+  /* Hapus margin sidebar (md:ml-64) agar konten full-width */
+  .md\:ml-64 {
+    margin-left: 0 !important;
+  }
+
+  /* Reset layout agar konten mengisi halaman penuh */
   body {
     background: white !important;
     color: black !important;
     font-size: 11pt;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Pastikan flex container mengambil lebar penuh */
+  .flex.min-h-screen {
+    display: block !important;
   }
 
   /* Kartu potongan */
-  .rounded-2xl, .rounded-xl {
-    border-radius: 0 !important;
+  .rounded-2xl,
+  .rounded-xl {
+    border-radius: 4px !important;
     box-shadow: none !important;
   }
 
@@ -106,7 +112,7 @@
     print-color-adjust: exact !important;
   }
 
-  /* Margin halaman */
+  /* Margin halaman A4 */
   @page {
     margin: 1.5cm 2cm;
     size: A4 portrait;
