@@ -31,32 +31,36 @@ function getSheetsClient() {
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID || '';
 
 // ── Sheet: DATA_GURU ────────────────────────────────────────
-// Kolom: NIP(A) | NAMA(B) | JABATAN(C) | EMAIL(D) | _(E kosong) | NO_WA(F)
+// Kolom aktual: NO(A) | NAMA(B) | NIP(C) | JABATAN(D) | EMAIL(E) | _(F kosong) | NO_WA(G)
 export async function getSemuaGuru(): Promise<Guru[]> {
   const sheets = getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
-    range: 'DATA_GURU!A2:F',
+    range: 'DATA_GURU!A2:G',
   });
   const rows = res.data.values || [];
-  return rows.map((row) => ({
-    nip:     row[0] || '',
-    nama:    row[1] || '',
-    jabatan: row[2] || '',
-    email:   row[3] || '',
-    no_wa:   row[5] || '',   // kolom F (index 5), kolom E kosong
-    aktif:   true,
-  }));
+  return rows
+    .filter((row) => row[2])  // hanya baris yang punya NIP (kolom C)
+    .map((row) => ({
+      nip:     row[2] || '',   // NIP ada di kolom C (index 2)
+      nama:    row[1] || '',   // NAMA ada di kolom B (index 1)
+      jabatan: row[3] || '',   // JABATAN ada di kolom D (index 3)
+      email:   row[4] || '',   // EMAIL ada di kolom E (index 4)
+      no_wa:   row[6] || '',   // NO_WA ada di kolom G (index 6), kolom F kosong
+      aktif:   true,
+    }));
 }
 
 export async function tambahGuru(guru: Omit<Guru, 'aktif'>): Promise<void> {
   const sheets = getSheetsClient();
+  // Urutan kolom: NO | NAMA | NIP | JABATAN | EMAIL
+  // NO diisi otomatis (kosong), sisanya sesuai urutan sheet
   await sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
     range: 'DATA_GURU!A:E',
     valueInputOption: 'USER_ENTERED',
     requestBody: {
-      values: [[guru.nip, guru.nama, guru.jabatan || '', guru.email || '', 'Ya']],
+      values: [['', guru.nama, guru.nip, guru.jabatan || '', guru.email || '']],
     },
   });
 }
