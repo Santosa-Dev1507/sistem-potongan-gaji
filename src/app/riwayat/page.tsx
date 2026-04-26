@@ -14,10 +14,6 @@ interface Record {
   status: 'SELESAI' | 'DIPROSES';
 }
 
-const MOCK: Record[] = [
-  { month: 'Maret 2026',    id: 'POT-2026-03', totalPotongan: 44_100_000, status: 'SELESAI'  },
-];
-
 const STATUS_CFG = {
   SELESAI:  { label: 'Selesai',  bg: 'bg-tertiary-fixed',  text: 'text-on-tertiary-fixed', icon: CheckCircle },
   DIPROSES: { label: 'Diproses', bg: 'bg-primary-fixed',   text: 'text-primary',            icon: Clock       },
@@ -45,10 +41,10 @@ export default function RiwayatPage() {
           const total = (slip.potongan as { nominal: number }[]).reduce((s: number, p: { nominal: number }) => s + p.nominal, 0);
           setRecord({ month: `${slip.bulan} ${slip.tahun}`, id: slip.id, totalPotongan: total, status: 'SELESAI' });
         } else {
-          setRecord(MOCK[0]);
+          setRecord(null);
         }
       })
-      .catch(() => setRecord(MOCK[0]))
+      .catch(() => setRecord(null))
       .finally(() => setLoading(false));
   }, [user]);
 
