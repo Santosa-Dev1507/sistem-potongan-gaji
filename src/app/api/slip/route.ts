@@ -3,11 +3,17 @@
 import { NextResponse } from 'next/server';
 import { getSlipByNip, getAllSlipsBulan, upsertSlip } from '@/lib/sheets';
 
+const BULAN_ID = [
+  'Januari','Februari','Maret','April','Mei','Juni',
+  'Juli','Agustus','September','Oktober','November','Desember',
+];
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const nip = searchParams.get('nip');
-  const bulan = searchParams.get('bulan') || 'April';
-  const tahun = parseInt(searchParams.get('tahun') || '2026', 10);
+  const now = new Date();
+  const bulan = searchParams.get('bulan') || BULAN_ID[now.getMonth()];
+  const tahun = parseInt(searchParams.get('tahun') || String(now.getFullYear()), 10);
 
   try {
     if (nip) {

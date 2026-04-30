@@ -35,7 +35,14 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/dashboard')
+    const now = new Date();
+    const BULAN_ID = [
+      'Januari','Februari','Maret','April','Mei','Juni',
+      'Juli','Agustus','September','Oktober','November','Desember'
+    ];
+    const bulan = BULAN_ID[now.getMonth()];
+    const tahun = now.getFullYear();
+    fetch(`/api/dashboard?bulan=${bulan}&tahun=${tahun}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -47,7 +54,8 @@ export default function DashboardPage() {
   }, []);
 
   const displayStats = (dashboardData?.stats as any[]) || stats;
-  const penyaluran = (dashboardData?.penyaluran as any) || { belumSetor: 3, totalInstansi: 15, bulanLabel: 'April 2026' };
+  const fallbackBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][new Date().getMonth()];
+  const penyaluran = (dashboardData?.penyaluran as any) || { belumSetor: 3, totalInstansi: 15, bulanLabel: `${fallbackBulan} ${new Date().getFullYear()}` };
   return (
     <AppShell>
       <div className="space-y-6 md:space-y-8">
