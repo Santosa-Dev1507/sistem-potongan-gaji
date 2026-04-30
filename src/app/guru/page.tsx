@@ -3,7 +3,7 @@
 import { useEffect, useState, FormEvent } from 'react';
 import AppShell from '@/components/AppShell';
 import { Guru } from '@/lib/types';
-import { Search, Plus, Eye, X, Loader, MessageCircle, Send } from 'lucide-react';
+import { Search, Plus, X, Loader, MessageCircle, Send } from 'lucide-react';
 
 // Mock fallback
 const MOCK_GURU: Guru[] = [
@@ -182,11 +182,6 @@ export default function GuruPage() {
                     <td className="px-5 py-4 text-sm text-on-surface-variant">{g.jabatan || '–'}</td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        {/* Tombol Lihat Slip */}
-                        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-container text-secondary hover:bg-primary hover:text-white rounded-lg text-xs font-semibold transition-all min-h-[36px]">
-                          <Eye className="w-4 h-4" />
-                          Slip
-                        </button>
 
                         {/* Tombol Kirim WA */}
                         {g.no_wa ? (
