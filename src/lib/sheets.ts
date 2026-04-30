@@ -355,3 +355,89 @@ export async function updateStatusDistribusi(
     });
   }
 }
+
+// ── Status Pembayaran Guru ─────────────────────────────────
+
+// Baca status bayar dari sheet STATUS_BAYAR
+export async function getStatusBayar(
+  bulan: string,
+  tahun: number
+): Promise<Record<string, { status: 'LUNAS' | 'BELUM'; tglBayar?: string; metode?: string }>> {
+  const sheets = getSheetsClient();
+  try {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'STATUS_BAYAR!A2:F',
+    });
+    const rows = (res.data.values || []) as string[][];
+    const result: Record<string, { status: 'LUNAS' | 'BELUM'; tglBayar?: string; metode?: string }> = {};
+    for (const row of rows) {
+      if (row[0]?.toUpperCase() === bulan.toUpperCase() && row[1] === String(tahun)) {
+        const nip = row[2];
+        const st = (row[3] || 'BELUM') as 'LUNAS' | 'BELUM';
+        if (nip) result[nip] = { status: st, tglBayar: row[4] || undefined, metode: row[5] || undefined };
+      }
+    }
+    return result;
+  } catch {
+    return {};
+  }
+}
+
+// Tandai status bayar per guru di sheet STATUS_BAYAR
+export async function updateStatusBayar(
+  bulan: string,
+  tahun: number,
+  nip: string,
+  status: 'LUNAS' | 'BELUM',
+  metode: string = 'TRANSFER'
+): Promise<void> {
+  const sheets = getSheetsClient();
+  const tglBayar = status === 'LUNAS' ? new Date().toISOString().split('T')[0] : '';
+  const newRow = [bulan.toUpperCase(), tahun, nip, status, tglBayar, status === 'LUNAS' ? metode : ''];
+
+  try {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'STATUS_BAYAR!A2:F',
+    });
+    const rows = (res.data.values || []) as string[][];
+    const idx = rows.findIndex(
+      (r) => r[0]?.toUpperCase() === bulan.toUpperCase() && r[1] === String(tahun) && r[2] === nip
+    );
+
+    if (idx >= 0) {
+      const sheetRow = idx + 2; // +1 header, +1 0-index
+      await sheets.spreadsheets.values.update({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `STATUS_BAYAR!A${sheetRow}:F${sheetRow}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [newRow] },
+      });
+    } else {
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'STATUS_BAYAR!A:F',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [newRow] },
+      });
+    }
+  } catch (err) {
+    console.error('[updateStatusBayar] error:', err);
+    throw err;
+  }
+}
+
+// Tandai semua guru LUNAS di sheet STATUS_BAYAR
+export async function bulkUpdateStatusBayar(
+  bulan: string,
+  tahun: number,
+  nips: string[],
+  metode: string = 'TRANSFER'
+): Promise<void> {
+  // To avoid hitting API rate limits or writing complex batchUpdate logic for an undetermined
+  // number of existing rows, we can just sequentially update or simply use updateStatusBayar
+  // in a loop. For simplicity and reliability with Google Sheets API, a loop with a small delay
+  // is often sufficient for ~80 users, but doing it in parallel is faster.
+  await Promise.all(nips.map(nip => updateStatusBayar(bulan, tahun, nip, 'LUNAS', metode)));
+}

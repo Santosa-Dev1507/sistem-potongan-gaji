@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import AppShell from '@/components/AppShell';
 import { SlipPotongan, formatRupiah } from '@/lib/types';
-import { Download, Landmark, HelpCircle } from 'lucide-react';
+import { Download, Landmark, HelpCircle, CheckCircle2, Clock, Copy, MessageCircle } from 'lucide-react';
 
 export default function RincianPage() {
   const { user } = useAuth();
   const [slip, setSlip] = useState<SlipPotongan | null>(null);
+  const [statusBayar, setStatusBayar] = useState<{status: string, tglBayar?: string, metode?: string} | null>(null);
   const [loading, setLoading] = useState(true);
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -39,6 +40,8 @@ export default function RincianPage() {
     const urlPrev = `/api/slip?nip=${user.username}&bulan=${prevBulan}&tahun=${prevTahun}`;
     console.log('[rincian] fetch curr:', url, 'prev:', urlPrev);
 
+    const urlBayar = `/api/pembayaran?nip=${user.username}&bulan=${bulan}&tahun=${tahun}`;
+
     // Buat fallback dari data sesi — potongan kosong (belum ada data di sheet)
     const fallback: SlipPotongan = {
       id: `${user.username}-${bulan}-${tahun}`,
@@ -53,9 +56,15 @@ export default function RincianPage() {
     Promise.all([
       fetch(url).then((r) => r.json()),
       fetch(urlPrev).then((r) => r.json()).catch(() => ({ success: false })),
+      fetch(urlBayar).then((r) => r.json()).catch(() => ({ success: false })),
     ])
-      .then(([jsonCurr, jsonPrev]) => {
+      .then(([jsonCurr, jsonPrev, jsonBayar]) => {
         console.log('[rincian] response curr:', jsonCurr);
+        
+        if (jsonBayar.success && jsonBayar.data) {
+          setStatusBayar(jsonBayar.data);
+        }
+
         if (jsonCurr.success && jsonCurr.data) {
           const finalSlip = jsonCurr.data as SlipPotongan;
 
@@ -120,6 +129,65 @@ export default function RincianPage() {
 
         {!loading && slip && (
           <>
+            {/* Banner Pembayaran */}
+            {totalPotongan > 0 && (
+              statusBayar?.status === 'LUNAS' ? (
+                <div className="bg-tertiary-container text-on-tertiary-container rounded-2xl p-5 border border-tertiary/20 shadow-sm print:hidden">
+                  <div className="flex items-center gap-3 mb-2">
+                    <CheckCircle2 className="w-6 h-6 text-tertiary" />
+                    <h4 className="font-bold text-lg">Pembayaran Diterima</h4>
+                  </div>
+                  <p className="text-sm">
+                    Potongan bulan {slip.bulan} {slip.tahun} sebesar <span className="font-bold">{formatRupiah(totalPotongan)}</span> sudah diterima oleh bendahara pada {statusBayar.tglBayar || 'bulan ini'}.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-error-container text-on-error-container rounded-2xl p-5 border border-error/20 shadow-sm print:hidden">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Clock className="w-6 h-6 text-error" />
+                    <h4 className="font-bold text-lg">Pembayaran Belum Tercatat</h4>
+                  </div>
+                  
+                  <div className="bg-white/50 rounded-xl p-4 mb-4">
+                    <p className="text-sm mb-1">Total yang harus dibayar:</p>
+                    <p className="text-2xl font-black text-error">{formatRupiah(totalPotongan)}</p>
+                  </div>
+
+                  <div className="space-y-3 mb-5">
+                    <p className="text-sm font-medium">📌 Transfer ke rekening bendahara:</p>
+                    <div className="bg-white rounded-xl p-4 shadow-sm border border-outline-variant/30 flex items-center justify-between gap-4">
+                      <div>
+                        <p className="font-bold text-on-surface">{process.env.NEXT_PUBLIC_BENDAHARA_BANK || 'Bank BPD Jateng'}</p>
+                        <p className="text-lg font-mono font-bold text-primary my-0.5">{process.env.NEXT_PUBLIC_BENDAHARA_REKENING || '3074092046'}</p>
+                        <p className="text-xs text-secondary">a.n. {process.env.NEXT_PUBLIC_BENDAHARA_NAMA || 'Rizka Fitri Prasetyaningsih'}</p>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(process.env.NEXT_PUBLIC_BENDAHARA_REKENING || '3074092046');
+                          alert('Nomor rekening berhasil disalin!');
+                        }}
+                        className="w-10 h-10 rounded-xl bg-surface-container-low flex items-center justify-center text-primary hover:bg-surface-container transition-colors shrink-0"
+                        title="Salin No Rekening"
+                      >
+                        <Copy className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <p className="text-xs">💵 Atau serahkan tunai langsung ke bendahara.</p>
+                  </div>
+
+                  <a
+                    href="https://wa.me/6285879652335?text=Assalamu'alaikum%2C%20saya%20sudah%20transfer%20untuk%20potongan%20bulan%20ini."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-[#25D366] text-white font-bold rounded-xl active:scale-95 transition-all"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    Konfirmasi via WhatsApp
+                  </a>
+                </div>
+              )
+            )}
+
             {/* Identitas Pegawai */}
             <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/30 p-5 flex items-start justify-between gap-4">
               <div>

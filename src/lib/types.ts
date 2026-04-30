@@ -58,6 +58,16 @@ export interface DistribusiItem {
   tglSetor?: string;
 }
 
+// ── Status Pembayaran Guru ─────────────────────────────────
+export interface StatusBayarItem {
+  nip: string;
+  nama: string;
+  totalPotongan: number;
+  status: 'LUNAS' | 'BELUM';
+  tglBayar?: string;
+  metode?: string;
+}
+
 // patterns: kata kunci (lowercase) yang dicocokkan ke nama kolom header sheet secara parsial
 export const INSTANSI_MAP: { instansi: string; kategori: string; patterns: string[] }[] = [
   { instansi: 'Koperasi Narasoma',   kategori: 'Koperasi Pokok & Angsuran', patterns: ['narasoma'] },

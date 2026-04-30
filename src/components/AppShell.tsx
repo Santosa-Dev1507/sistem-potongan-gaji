@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { LayoutDashboard, Users, Upload, Landmark, FileText, History, LogOut, X, Menu, Calendar, Bell, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, Landmark, FileText, History, LogOut, X, Menu, Calendar, Bell, CalendarDays, Wallet } from 'lucide-react';
 import Link from 'next/link';
 
 const adminNav = [
@@ -11,6 +11,7 @@ const adminNav = [
   { href: '/guru',          label: 'Data Guru',           icon: Users },
   { href: '/import',        label: 'Impor Tagihan',       icon: Upload },
   { href: '/distribusi',    label: 'Distribusi Saluran',  icon: Landmark },
+  { href: '/status-bayar',  label: 'Status Bayar',        icon: Wallet },
   { href: '/riwayat-admin', label: 'Riwayat Historis',   icon: CalendarDays },
 ];
 
@@ -24,6 +25,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   '/guru':          { title: 'Direktori Guru',         subtitle: 'Potongan Individu' },
   '/import':        { title: 'Impor Tagihan Guru',     subtitle: 'Buku Kas Institusi' },
   '/distribusi':    { title: 'Distribusi Penyaluran',  subtitle: 'Instansi Pihak Ke-3' },
+  '/status-bayar':  { title: 'Status Pembayaran',      subtitle: 'Pembayaran Guru' },
   '/rincian':       { title: 'Rincian Potongan',       subtitle: 'SMPN 5 Klaten' },
   '/riwayat':       { title: 'Riwayat Potongan',       subtitle: 'Rekam Jejak Operasional' },
   '/riwayat-admin': { title: 'Riwayat Historis',       subtitle: 'Data Bulan Sebelumnya' },
