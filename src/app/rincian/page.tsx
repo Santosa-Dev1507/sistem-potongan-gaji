@@ -152,7 +152,7 @@ export default function RincianPage() {
                       <div className="flex items-start gap-2 min-w-0">
                         <span className="text-xs text-secondary/60 font-mono shrink-0 mt-0.5 w-5 text-right">{idx + 1}.</span>
                         <div className="min-w-0 flex flex-col items-start">
-                          <p className={`text-sm ${item.selisih !== undefined || item.isBaru ? 'font-bold text-error' : 'text-on-surface'}`}>{item.name}</p>
+                          <p className={`text-sm text-on-surface ${item.selisih !== undefined || item.isBaru ? 'font-bold' : ''}`}>{item.name}</p>
                           <div className="flex flex-wrap gap-1 mt-0.5">
                             {item.angsuranKe && (
                               <span className="inline-block px-2 py-0.5 bg-primary-fixed text-on-primary-fixed text-[10px] font-bold rounded-full">
@@ -160,7 +160,7 @@ export default function RincianPage() {
                               </span>
                             )}
                             {item.isBaru && (
-                              <span className="inline-block px-2 py-0.5 bg-tertiary text-white text-[10px] font-bold rounded-full">
+                              <span className="inline-block px-2 py-0.5 bg-error text-white text-[10px] font-bold rounded-full">
                                 Baru
                               </span>
                             )}
@@ -173,7 +173,7 @@ export default function RincianPage() {
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className={`text-sm font-bold ${aktif ? (item.selisih !== undefined || item.isBaru ? 'text-error' : 'text-on-surface') : 'text-secondary'}`}>
+                        <p className={`text-sm font-bold ${aktif ? 'text-on-surface' : 'text-secondary'}`}>
                           {aktif ? formatRupiah(item.nominal) : '–'}
                         </p>
                       </div>
