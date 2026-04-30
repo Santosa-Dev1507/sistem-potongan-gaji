@@ -71,19 +71,30 @@ export default function RincianPage() {
           // Komparasi dengan bulan sebelumnya jika ada
           if (jsonPrev.success && jsonPrev.data) {
             const prevPotongan = jsonPrev.data.potongan as SlipPotongan['potongan'];
-            finalSlip.potongan = finalSlip.potongan.map((curr) => {
-              // Cari berdasarkan ID instansi (atau name sebagai fallback)
-              const prev = prevPotongan.find((p) => p.id === curr.id || p.name === curr.name);
-              if (prev) {
-                if (curr.nominal !== prev.nominal) {
-                  return { ...curr, selisih: curr.nominal - prev.nominal };
+            
+            // Cek apakah bulan lalu ada isinya (total potongan > 0). 
+            // Jika kosong (0), jangan tampilkan perbandingan agar tidak muncul "Naik" untuk semuanya.
+            const hasPrevData = prevPotongan.some(p => p.nominal > 0);
+
+            if (hasPrevData) {
+              finalSlip.potongan = finalSlip.potongan.map((curr) => {
+                // Cari berdasarkan ID instansi (atau name sebagai fallback)
+                const prev = prevPotongan.find((p) => p.id === curr.id || p.name === curr.name);
+                if (prev) {
+                  if (curr.nominal !== prev.nominal && prev.nominal > 0) {
+                    // Hanya tandai 'Naik/Turun' jika bulan lalu nilainya BUKAN 0. 
+                    // Jika bulan lalu 0 dan sekarang ada, itu berarti 'Baru'
+                    return { ...curr, selisih: curr.nominal - prev.nominal };
+                  } else if (curr.nominal > 0 && prev.nominal === 0) {
+                    return { ...curr, isBaru: true };
+                  }
+                } else if (curr.nominal > 0) {
+                  // Item ini tidak ada di bulan lalu, tapi sekarang ada isinya
+                  return { ...curr, isBaru: true };
                 }
-              } else if (curr.nominal > 0) {
-                // Item ini tidak ada di bulan lalu atau nilainya 0, tapi sekarang ada isinya
-                return { ...curr, isBaru: true };
-              }
-              return curr;
-            });
+                return curr;
+              });
+            }
           }
           setSlip(finalSlip);
         } else {
