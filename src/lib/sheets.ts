@@ -329,11 +329,33 @@ export async function updateStatusDistribusi(
   const tglSetor = status === 'SUDAH_DISETOR' ? new Date().toISOString().split('T')[0] : '';
   const newRow = [bulan.toUpperCase(), tahun, instansi, status, tglSetor];
 
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: SPREADSHEET_ID,
-    range: 'STATUS_DISTRIBUSI!A2:E',
-  });
-  const rows = (res.data.values || []) as string[][];
+  let rows: string[][] = [];
+  try {
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'STATUS_DISTRIBUSI!A2:E',
+    });
+    rows = (res.data.values || []) as string[][];
+  } catch (err: any) {
+    if (err.message && err.message.includes('Unable to parse range')) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: SPREADSHEET_ID,
+        requestBody: {
+          requests: [{ addSheet: { properties: { title: 'STATUS_DISTRIBUSI' } } }]
+        }
+      });
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'STATUS_DISTRIBUSI!A1:E1',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: { values: [['BULAN', 'TAHUN', 'INSTANSI', 'STATUS', 'TGL_SETOR']] },
+      });
+      rows = [];
+    } else {
+      throw err;
+    }
+  }
+
   const idx = rows.findIndex(
     (r) => r[0]?.toUpperCase() === bulan.toUpperCase() && r[1] === String(tahun) && r[2] === instansi
   );
@@ -397,11 +419,35 @@ export async function updateStatusBayar(
   const newRow = [bulan.toUpperCase(), tahun, nip, status, tglBayar, status === 'LUNAS' ? metode : ''];
 
   try {
-    const res = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: 'STATUS_BAYAR!A2:F',
-    });
-    const rows = (res.data.values || []) as string[][];
+    let rows: string[][] = [];
+    try {
+      const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'STATUS_BAYAR!A2:F',
+      });
+      rows = (res.data.values || []) as string[][];
+    } catch (err: any) {
+      if (err.message && err.message.includes('Unable to parse range')) {
+        // Create sheet if not exists
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: SPREADSHEET_ID,
+          requestBody: {
+            requests: [{ addSheet: { properties: { title: 'STATUS_BAYAR' } } }]
+          }
+        });
+        // Add header
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: SPREADSHEET_ID,
+          range: 'STATUS_BAYAR!A1:F1',
+          valueInputOption: 'USER_ENTERED',
+          requestBody: { values: [['BULAN', 'TAHUN', 'NIP', 'STATUS', 'TGL_BAYAR', 'METODE']] },
+        });
+        rows = [];
+      } else {
+        throw err;
+      }
+    }
+
     const idx = rows.findIndex(
       (r) => r[0]?.toUpperCase() === bulan.toUpperCase() && r[1] === String(tahun) && r[2] === nip
     );

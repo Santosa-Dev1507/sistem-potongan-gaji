@@ -59,12 +59,18 @@ export default function StatusBayarPage() {
     );
 
     try {
-      await fetch('/api/pembayaran', {
+      const res = await fetch('/api/pembayaran', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bulan, tahun, nip: item.nip, status: newStatus }),
       });
-    } catch {
+      
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.error || 'Gagal menyimpan status');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Koneksi gagal');
       fetchData(); // rollback
     } finally {
       setToggling(null);
@@ -83,14 +89,19 @@ export default function StatusBayarPage() {
     ));
 
     try {
-      await fetch('/api/pembayaran/bulk', {
+      const res = await fetch('/api/pembayaran/bulk', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bulan, tahun, nips: nipsToUpdate }),
       });
-    } catch {
+      
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.error || 'Gagal update massal');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Koneksi gagal');
       fetchData(); // rollback
-      alert('Gagal update massal');
     } finally {
       setBulkLoading(false);
     }
