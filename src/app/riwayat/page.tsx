@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 
 interface Record {
   month: string;
+  bulan: string;
+  tahun: number;
   id: string;
   totalPotongan: number;
   status: 'SELESAI' | 'DIPROSES';
@@ -39,7 +41,14 @@ export default function RiwayatPage() {
         if (json.success && json.data) {
           const slip = json.data;
           const total = (slip.potongan as { nominal: number }[]).reduce((s: number, p: { nominal: number }) => s + p.nominal, 0);
-          setRecord({ month: `${slip.bulan} ${slip.tahun}`, id: slip.id, totalPotongan: total, status: 'SELESAI' });
+          setRecord({
+            month: `${slip.bulan} ${slip.tahun}`,
+            bulan: slip.bulan,
+            tahun: slip.tahun,
+            id: slip.id,
+            totalPotongan: total,
+            status: 'SELESAI',
+          });
         } else {
           setRecord(null);
         }
@@ -64,7 +73,7 @@ export default function RiwayatPage() {
 
         {!loading && record && cfg && (
           <button
-            onClick={() => router.push('/rincian')}
+            onClick={() => router.push(`/rincian?bulan=${record.bulan}&tahun=${record.tahun}`)}
             className="w-full text-left bg-white rounded-2xl shadow-sm border border-outline-variant/20 p-5 hover:shadow-md hover:border-primary/30 transition-all active:scale-[0.99]"
           >
             <div className="flex items-start justify-between gap-3 mb-4">

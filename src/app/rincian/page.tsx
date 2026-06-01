@@ -1,13 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, Suspense } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import AppShell from '@/components/AppShell';
 import { SlipPotongan, formatRupiah } from '@/lib/types';
 import { Download, Landmark, HelpCircle, CheckCircle2, Clock, Copy, MessageCircle } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 
-export default function RincianPage() {
+function RincianContent() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const queryBulan = searchParams.get('bulan');
+  const queryTahun = searchParams.get('tahun');
+
   const [slip, setSlip] = useState<SlipPotongan | null>(null);
   const [statusBayar, setStatusBayar] = useState<{status: string, tglBayar?: string, metode?: string} | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,11 +29,16 @@ export default function RincianPage() {
       'Juli','Agustus','September','Oktober','November','Desember'
     ];
     const currIndex = now.getMonth();
-    const bulan = BULAN_ID[currIndex];
-    const tahun = now.getFullYear();
+    const defaultBulan = BULAN_ID[currIndex];
+    const defaultTahun = now.getFullYear();
+
+    const bulan = queryBulan || defaultBulan;
+    const tahun = queryTahun ? parseInt(queryTahun, 10) : defaultTahun;
+
+    const selectedBulanIndex = BULAN_ID.includes(bulan) ? BULAN_ID.indexOf(bulan) : currIndex;
 
     // Hitung bulan sebelumnya
-    let prevIndex = currIndex - 1;
+    let prevIndex = selectedBulanIndex - 1;
     let prevTahun = tahun;
     if (prevIndex < 0) {
       prevIndex = 11;
@@ -106,7 +116,7 @@ export default function RincianPage() {
         setSlip(fallback);
       })
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user, queryBulan, queryTahun]);
 
   const activePotongan = slip?.potongan.filter((p) => p.nominal > 0) ?? [];
   const totalPotongan = activePotongan.reduce((s, p) => s + p.nominal, 0);
@@ -308,5 +318,19 @@ export default function RincianPage() {
         )}
       </div>
     </AppShell>
+  );
+}
+
+export default function RincianPage() {
+  return (
+    <Suspense fallback={
+      <AppShell>
+        <div className="max-w-2xl mx-auto space-y-4">
+          <div className="bg-white rounded-2xl p-8 text-center text-secondary text-sm">Memuat halaman...</div>
+        </div>
+      </AppShell>
+    }>
+      <RincianContent />
+    </Suspense>
   );
 }
