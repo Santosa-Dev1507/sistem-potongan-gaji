@@ -3,7 +3,132 @@
 import { useEffect, useState, useCallback } from 'react';
 import AppShell from '@/components/AppShell';
 import { StatusBayarItem, formatRupiah } from '@/lib/types';
-import { Wallet, CheckCircle2, Clock, RefreshCw, Search, CheckSquare } from 'lucide-react';
+import { Wallet, CheckCircle2, Clock, RefreshCw, Search, CheckSquare, Banknote, CreditCard, X } from 'lucide-react';
+
+// ── Modal pilih metode pembayaran ────────────────────────────
+function MetodeModal({
+  nama,
+  onConfirm,
+  onCancel,
+}: {
+  nama: string;
+  onConfirm: (metode: 'TUNAI' | 'TRANSFER') => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-base font-black text-on-surface">Tandai Lunas</h3>
+            <p className="text-xs text-secondary mt-0.5 leading-snug">
+              Pilih metode pembayaran untuk<br />
+              <span className="font-bold text-on-surface">{nama}</span>
+            </p>
+          </div>
+          <button
+            onClick={onCancel}
+            className="p-1.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Pilihan */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => onConfirm('TUNAI')}
+            className="flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 border-outline-variant/30 hover:border-primary hover:bg-primary/5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+              <Banknote className="w-5 h-5 text-on-tertiary-container group-hover:text-primary" />
+            </div>
+            <span className="text-sm font-bold text-on-surface">Tunai</span>
+          </button>
+
+          <button
+            onClick={() => onConfirm('TRANSFER')}
+            className="flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 border-outline-variant/30 hover:border-primary hover:bg-primary/5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+              <CreditCard className="w-5 h-5 text-secondary group-hover:text-primary" />
+            </div>
+            <span className="text-sm font-bold text-on-surface">Transfer</span>
+          </button>
+        </div>
+
+        <button
+          onClick={onCancel}
+          className="w-full py-2.5 text-sm font-bold text-secondary hover:text-on-surface transition-colors"
+        >
+          Batal
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Modal pilih metode untuk bulk lunas ──────────────────────
+function BulkMetodeModal({
+  jumlah,
+  onConfirm,
+  onCancel,
+}: {
+  jumlah: number;
+  onConfirm: (metode: 'TUNAI' | 'TRANSFER') => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-base font-black text-on-surface">Tandai Semua Lunas</h3>
+            <p className="text-xs text-secondary mt-0.5 leading-snug">
+              Pilih metode untuk <span className="font-bold text-on-surface">{jumlah} guru</span> yang belum bayar
+            </p>
+          </div>
+          <button
+            onClick={onCancel}
+            className="p-1.5 rounded-lg text-secondary hover:bg-surface-container-high transition-colors shrink-0"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => onConfirm('TUNAI')}
+            className="flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 border-outline-variant/30 hover:border-primary hover:bg-primary/5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+              <Banknote className="w-5 h-5 text-on-tertiary-container group-hover:text-primary" />
+            </div>
+            <span className="text-sm font-bold text-on-surface">Tunai</span>
+          </button>
+
+          <button
+            onClick={() => onConfirm('TRANSFER')}
+            className="flex flex-col items-center gap-2.5 p-4 rounded-xl border-2 border-outline-variant/30 hover:border-primary hover:bg-primary/5 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+              <CreditCard className="w-5 h-5 text-secondary group-hover:text-primary" />
+            </div>
+            <span className="text-sm font-bold text-on-surface">Transfer</span>
+          </button>
+        </div>
+
+        <button
+          onClick={onCancel}
+          className="w-full py-2.5 text-sm font-bold text-secondary hover:text-on-surface transition-colors"
+        >
+          Batal
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const BULAN_ID = [
   'Januari','Februari','Maret','April','Mei','Juni',
@@ -18,10 +143,14 @@ export default function StatusBayarPage() {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
   const [error, setError] = useState('');
-  
+
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'SEMUA' | 'LUNAS' | 'BELUM'>('SEMUA');
   const [bulkLoading, setBulkLoading] = useState(false);
+
+  // Modal state
+  const [metodeModal, setMetodeModal] = useState<StatusBayarItem | null>(null);
+  const [bulkMetodeModal, setBulkMetodeModal] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -46,14 +175,43 @@ export default function StatusBayarPage() {
   }, [fetchData]);
 
   const handleToggle = async (item: StatusBayarItem) => {
-    const newStatus = item.status === 'LUNAS' ? 'BELUM' : 'LUNAS';
+    // Jika sudah lunas → langsung batalkan tanpa modal
+    if (item.status === 'LUNAS') {
+      setToggling(item.nip);
+      setData((prev) =>
+        prev.map((d) =>
+          d.nip === item.nip ? { ...d, status: 'BELUM', tglBayar: undefined, metode: undefined } : d
+        )
+      );
+      try {
+        const res = await fetch('/api/pembayaran', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bulan, tahun, nip: item.nip, status: 'BELUM' }),
+        });
+        const resData = await res.json();
+        if (!res.ok || !resData.success) throw new Error(resData.error || 'Gagal menyimpan status');
+      } catch (err: any) {
+        alert(err.message || 'Koneksi gagal');
+        fetchData();
+      } finally {
+        setToggling(null);
+      }
+      return;
+    }
+    // Jika belum lunas → tampilkan modal pilih metode
+    setMetodeModal(item);
+  };
+
+  const confirmTandaiLunas = async (item: StatusBayarItem, metode: 'TUNAI' | 'TRANSFER') => {
+    setMetodeModal(null);
     setToggling(item.nip);
 
     // Optimistic update
     setData((prev) =>
       prev.map((d) =>
         d.nip === item.nip
-          ? { ...d, status: newStatus, tglBayar: newStatus === 'LUNAS' ? new Date().toISOString().split('T')[0] : undefined }
+          ? { ...d, status: 'LUNAS', tglBayar: new Date().toISOString().split('T')[0], metode }
           : d
       )
     );
@@ -62,46 +220,48 @@ export default function StatusBayarPage() {
       const res = await fetch('/api/pembayaran', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bulan, tahun, nip: item.nip, status: newStatus }),
+        body: JSON.stringify({ bulan, tahun, nip: item.nip, status: 'LUNAS', metode }),
       });
-      
       const resData = await res.json();
-      if (!res.ok || !resData.success) {
-        throw new Error(resData.error || 'Gagal menyimpan status');
-      }
+      if (!res.ok || !resData.success) throw new Error(resData.error || 'Gagal menyimpan status');
     } catch (err: any) {
       alert(err.message || 'Koneksi gagal');
-      fetchData(); // rollback
+      fetchData();
     } finally {
       setToggling(null);
     }
   };
 
-  const handleBulkLunas = async () => {
-    if (!confirm('Tandai semua guru yang belum bayar menjadi LUNAS?')) return;
-    
+  const handleBulkLunas = () => {
+    if (totalBelum === 0) return;
+    setBulkMetodeModal(true);
+  };
+
+  const confirmBulkLunas = async (metode: 'TUNAI' | 'TRANSFER') => {
+    setBulkMetodeModal(false);
     setBulkLoading(true);
-    const nipsToUpdate = data.filter(d => d.status === 'BELUM').map(d => d.nip);
-    
+    const nipsToUpdate = data.filter((d) => d.status === 'BELUM').map((d) => d.nip);
+
     // Optimistic
-    setData(prev => prev.map(d => 
-      d.status === 'BELUM' ? { ...d, status: 'LUNAS', tglBayar: new Date().toISOString().split('T')[0] } : d
-    ));
+    setData((prev) =>
+      prev.map((d) =>
+        d.status === 'BELUM'
+          ? { ...d, status: 'LUNAS', tglBayar: new Date().toISOString().split('T')[0], metode }
+          : d
+      )
+    );
 
     try {
       const res = await fetch('/api/pembayaran/bulk', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bulan, tahun, nips: nipsToUpdate }),
+        body: JSON.stringify({ bulan, tahun, nips: nipsToUpdate, metode }),
       });
-      
       const resData = await res.json();
-      if (!res.ok || !resData.success) {
-        throw new Error(resData.error || 'Gagal update massal');
-      }
+      if (!res.ok || !resData.success) throw new Error(resData.error || 'Gagal update massal');
     } catch (err: any) {
       alert(err.message || 'Koneksi gagal');
-      fetchData(); // rollback
+      fetchData();
     } finally {
       setBulkLoading(false);
     }
@@ -123,6 +283,22 @@ export default function StatusBayarPage() {
   return (
     <AppShell>
       <div className="max-w-6xl mx-auto space-y-6 md:space-y-8">
+
+        {/* Modals */}
+        {metodeModal && (
+          <MetodeModal
+            nama={metodeModal.nama}
+            onConfirm={(metode) => confirmTandaiLunas(metodeModal, metode)}
+            onCancel={() => setMetodeModal(null)}
+          />
+        )}
+        {bulkMetodeModal && (
+          <BulkMetodeModal
+            jumlah={totalBelum}
+            onConfirm={confirmBulkLunas}
+            onCancel={() => setBulkMetodeModal(false)}
+          />
+        )}
 
         {/* Toolbar */}
         <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -227,13 +403,23 @@ export default function StatusBayarPage() {
                         </td>
                         <td className="px-5 py-4 font-black text-on-surface">{formatRupiah(item.totalPotongan)}</td>
                         <td className="px-5 py-4">
-                          <div>
+                          <div className="space-y-1">
                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${lunas ? 'bg-tertiary-fixed text-on-tertiary-fixed' : 'bg-error/10 text-error'}`}>
                               {lunas ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
                               {lunas ? 'Lunas' : 'Belum Bayar'}
                             </span>
-                            {lunas && item.tglBayar && (
-                              <p className="text-[10px] text-secondary mt-1 pl-1">{item.tglBayar}</p>
+                            {lunas && (
+                              <div className="flex items-center gap-1.5 pl-1">
+                                {item.metode === 'TUNAI' ? (
+                                  <Banknote className="w-3 h-3 text-secondary" />
+                                ) : item.metode === 'TRANSFER' ? (
+                                  <CreditCard className="w-3 h-3 text-secondary" />
+                                ) : null}
+                                <p className="text-[10px] text-secondary">
+                                  {item.metode ? item.metode.charAt(0) + item.metode.slice(1).toLowerCase() : ''}
+                                  {item.tglBayar ? ` · ${item.tglBayar}` : ''}
+                                </p>
+                              </div>
                             )}
                           </div>
                         </td>
